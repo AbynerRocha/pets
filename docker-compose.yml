@@ -1,0 +1,24 @@
+name: mysql-pets
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:latest
+    container_name: mysql_container_pets
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: pets
+      MYSQL_USER: app
+      MYSQL_PASSWORD: pets
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: /z/Projects/databases/pets/mysql_data
+      o: bind
