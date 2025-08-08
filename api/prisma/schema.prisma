@@ -37,12 +37,13 @@ model Permission {
 }
 
 model UserPermission {
+  id           Int        @id @default(autoincrement()) @map("id")
+  permissionId Int        
   userId       Int
-  permissionId Int
+  gaveAt       DateTime   @default(now())
+  gaveBy       Int        @default(0)
+  user         User       @relation(fields: [userId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
 
-  user       User       @relation(fields: [userId], references: [id])
-  permission Permission @relation(fields: [permissionId], references: [id])
-
-  @@id([userId, permissionId])
   @@map("tb_user_permissions")
 }
