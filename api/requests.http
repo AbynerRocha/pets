@@ -1,0 +1,17 @@
+
+# POST http://localhost:3000/users/
+# Content-Type: application/json
+
+# {
+#     "name": "John Doe",
+#     "email": "Teste@ga.com",
+#     "password": "12345678",
+#     "permission": {
+#         "gaveBy": 1,
+#         "permissions": ["read", "write"]
+#     }, 
+# }
+
+# ///
+
+GET http://localhost:3000/users/test/8

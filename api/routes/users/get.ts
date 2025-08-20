@@ -2,59 +2,38 @@ import { FastifyInstance } from 'fastify'
 import { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { z } from 'zod/v4'
 import { getUserByEmail, getUserById, getUserByName } from '../../src/services/users';
+import { userSchema } from '../../src/schemas/users';
 
-export default async function getUserRoute(app: FastifyInstance) {
-    app.withTypeProvider<ZodTypeProvider>().get('/', {
+export default async function createUserRoute(app: FastifyInstance) {
+    app.withTypeProvider<ZodTypeProvider>().get('/:id', {
         schema: {
-            tags: ['get'],
-            summary: 'Get user',
-            description: 'Route to get user information',
-            querystring: z.object({
-                i: z.number().optional(), // User ID
-                nm: z.string().optional(), // User Name
-                em: z.string().email().optional(), // User Email
+            params: z.object({
+                id: z.coerce.number().int().positive({ error: 'ID must be a positive integer' }),
             }),
             response: {
-                200: z.any(),
-                400: z.object({ error: z.string() }),
-                404: z.object({ error: z.string() }),
-                500: z.object({ error: z.string() }),
-            }
-        }
+                400: z.object({ success: z.boolean(), error: z.string() }),
+                404: z.object({ success: z.boolean(), error: z.string() }),
+                200: z.object({
+                    success: z.boolean(),
+                    user: z.object({ 
+                        id: z.number().int().positive(),
+                        name: z.string(),
+                        email: z.email(),
+                        createdAt: z.date(),
+                        updatedAt: z.date().optional(),
+                        permissions: z.array(z.string()) // Assuming permissions are strings
+                    }),
+                }),
+            },
+        },
     }, async (request, reply) => {
-        if(!request.query) {
-            return reply.status(400).send({ error: 'Query parameters are required' });
+        const { id } = request.params as { id: number }
+        const user = await getUserById(id)
+
+        if (!user) {
+            return reply.status(404).send({ success: false, error: 'User not found' })
         }
 
-        try {
-            if(request.query.i !== undefined && request.query.i !== null) {
-                const user = getUserById(request.query.i)
-    
-                if(!user) {
-                    return reply.status(404).send({ error: 'User not found' });
-                }
-    
-                return reply.status(201).send({ user });
-            } else if(request.query.nm !== undefined && request.query.nm !== null) {
-                const user = await getUserByName(request.query.nm);
-    
-                if(!user) {
-                    return reply.status(404).send({ error: 'User not found' });
-                }
-    
-                return reply.status(201).send({ user });
-            } else if(request.query.em !== undefined && request.query.em !== null) {
-                const user = await getUserByEmail(request.query.em);
-    
-                if(!user) {
-                    return reply.status(404).send({ error: 'User not found' });
-                }
-    
-                return reply.status(201).send({ user });
-            }
-        } catch (error) {
-            console.error('Error fetching user:', error);
-            return reply.status(500).send({ error: 'Internal server error' });
-        }
+        return reply.status(200).send({ success: true, user })
     });
 }

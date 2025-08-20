@@ -23,7 +23,7 @@ export default async function createUserRoute(app: FastifyInstance) {
         
     }, async (request, reply) => {
         try {
-            const { name, email, password } = request.body
+            const { name, email, password, permission } = request.body
 
             const thisUserExists = await getUserByEmail(email)
 
@@ -34,13 +34,14 @@ export default async function createUserRoute(app: FastifyInstance) {
                 })
             }
 
-            const newUser = await createUser({
+            const newUserId = await createUser({
                 name,
                 email,
                 password,
+                permission
             })
             
-            if (!newUser) {
+            if (!newUserId) {
                 return reply.status(400).send({ 
                     error: "User creation failed",
                     message: "Não foi possível criar este usuário nesse momento."
@@ -48,7 +49,7 @@ export default async function createUserRoute(app: FastifyInstance) {
             }
 
             return reply.status(200).send({
-                id: newUser.id
+                id: newUserId
             })
         } catch (error) {
             console.error(error)
